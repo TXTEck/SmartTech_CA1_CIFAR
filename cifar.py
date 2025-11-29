@@ -34,7 +34,7 @@ def load_cifar10():
     x_train = np.vstack(x_train_list)
     y_train = np.array(y_train_list)
 
-    # Fet test batch
+    # Fetch test batch
     test_batch = unpickle(os.path.join(path, "test_batch"))
     x_test = test_batch[b"data"]
     y_test = np.array(test_batch[b"labels"])
@@ -45,8 +45,33 @@ def load_cifar10():
 
     return x_train, y_train, x_test, y_test
 
+def get_cifar10_label_names():
+    meta = unpickle("cifar-10-batches-py/batches.meta")
+    label_names = [name.decode("utf-8") for name in meta[b"label_names"]]
+    return label_names
+
+def show_examples(x_train, y_train):
+    label_names = get_cifar10_label_names()
+
+    plt.figure(figsize=(15, 15))
+    
+    for i in range(50):
+        id = np.random.randint(0, len(x_train))
+        img = x_train[id]
+        label_num = y_train[id]
+        label_name = label_names[label_num]
+
+        plt.subplot(5, 10, i + 1)
+        plt.imshow(img)
+        plt.title(f"{label_num} - {label_name}", fontsize=8)
+        plt.axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
 def main():
     x_train, y_train, x_test, y_test = load_cifar10()
+    show_examples(x_train, y_train)
 
 if __name__ == "__main__":
     main()
