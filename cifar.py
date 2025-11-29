@@ -195,7 +195,8 @@ def examine_random_image_after_processing(x_train):
     plt.axis("off")
     plt.show()
 
-def main():
+
+def load_and_merge_data():
     # CIFAR-10 
     x_train_10, y_train_10, x_test_10, y_test_10 = load_cifar10()
 
@@ -210,14 +211,27 @@ def main():
         x_test_100, y_test_100
     )
 
+    return x_train, y_train, x_test, y_test, label_mapping
+
+def reshape_for_cnn(x_train,x_test):
+    x_train = x_train.reshape(x_train.shape[0], 32, 32, 1)
+    x_test = x_test.reshape(x_test.shape[0], 32, 32, 1)
+
+    return x_train, x_test
+
+def main():
+    x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
+
     x_train = reshape_images(x_train)
     x_test  = reshape_images(x_test)
 
-    # Preprocess (grayscale, equalize, normalize)
+    # Preprocess
     x_train = np.array(list(map(preprocessing, x_train)))
     x_test  = np.array(list(map(preprocessing, x_test)))
 
     examine_random_image_after_processing(x_train)
+
+    x_train, x_test = reshape_for_cnn(x_train, x_test)
 
 
 
