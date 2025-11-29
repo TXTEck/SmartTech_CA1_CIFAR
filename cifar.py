@@ -219,6 +219,13 @@ def reshape_for_cnn(x_train,x_test):
 
     return x_train, x_test
 
+def one_hot_encode(y_train, y_test, num_classes):
+    y_train = to_categorical(y_train, num_classes)
+    y_test = to_categorical(y_test, num_classes)
+
+    return y_train, y_test
+
+
 def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
 
@@ -232,6 +239,11 @@ def main():
     examine_random_image_after_processing(x_train)
 
     x_train, x_test = reshape_for_cnn(x_train, x_test)
+
+    num_classes = len(label_mapping)
+    one_hot_encode(y_train, y_test, num_classes)
+
+    print(num_classes)
 
 
 
