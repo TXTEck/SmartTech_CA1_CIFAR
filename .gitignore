@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE folders
+.vscode/
+.idea/
+
+# Build & packaging
+build/
+dist/
+*.egg-info/
+
+# Dataset folders 
+cifar-10-batches-py/
+cifar-100-python/
+
+# OS files
+.DS_Store
+Thumbs.db
