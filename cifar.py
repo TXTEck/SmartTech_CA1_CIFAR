@@ -60,9 +60,9 @@ def load_cifar100():
     path = "cifar-100-python"
 
     SELECTED_FINE_LABELS = [
-        19, 34, 2, 11, 35, 46, 98, 65, 80,     # main classes
-        47, 52, 56, 59, 96,                   # trees superclass
-        8, 13, 48, 58, 90, 41, 89             # vehicle/tool classes
+        19, 34, 2, 11, 35, 46, 98, 65, 80,     
+        47, 52, 56, 59, 96,                   
+        8, 13, 48, 58, 90, 41, 89             
     ]
 
     train = unpickle(os.path.join(path, "train"))
@@ -106,9 +106,9 @@ def show_examples_cifar10(x_train, y_train):
     plt.figure(figsize=(15, 15))
 
     for i in range(50):
-        idx = np.random.randint(0, len(x_train))
-        img = x_train[idx]
-        label = y_train[idx]
+        id = np.random.randint(0, len(x_train))
+        img = x_train[id]
+        label = y_train[id]
         name = label_names[label]
 
         plt.subplot(5, 10, i + 1)
@@ -121,7 +121,7 @@ def show_examples_cifar10(x_train, y_train):
 
 #Show CIFAR100 examples
 def show_examples_cifar100(x_train, y_train):
-    fine_names, _ = get_cifar100_label_names()   # we ignore coarse names
+    fine_names, _ = get_cifar100_label_names()
 
     plt.figure(figsize=(15, 15))
 
@@ -142,18 +142,60 @@ def show_examples_cifar100(x_train, y_train):
 
 def reshape_images(x):
     return x.reshape(-1, 3, 32, 32).transpose(0, 2, 3, 1)
+
+def merge_data(
+    x_train_10, y_train_10,
+    x_train_100, y_train_100,
+    x_test_10, y_test_10,
+    x_test_100, y_test_100
+):
+    
+    X_train = np.vstack([x_train_10, x_train_100])
+    y_train = np.hstack([y_train_10, y_train_100])
+
+    
+    unique_labels = np.sort(np.unique(y_train))
+
+    label_mapping = {}
+    new_id = 0
+    for orig in unique_labels:
+        label_mapping[orig] = new_id
+        new_id += 1
+
+    
+    y_train_mapped = np.array([label_mapping[label] for label in y_train])
+
+    
+    X_test = np.vstack([x_test_10, x_test_100])
+    y_test = np.hstack([y_test_10, y_test_100])
+
+    
+    y_test_mapped = np.array([label_mapping[label] for label in y_test])
+
+    return X_train, y_train_mapped, X_test, y_test_mapped, label_mapping
+
     
 def main():
-
-    # CIFAR-10
+    # CIFAR-10 
     x_train_10, y_train_10, x_test_10, y_test_10 = load_cifar10()
     x_train_10 = reshape_images(x_train_10)
+    x_test_10 = reshape_images(x_test_10)
     show_examples_cifar10(x_train_10, y_train_10)
 
-    # CIFAR-100
+    # CIFAR-100 
     x_train_100, y_train_100, x_test_100, y_test_100 = load_cifar100()
     x_train_100 = reshape_images(x_train_100)
+    x_test_100 = reshape_images(x_test_100)
     show_examples_cifar100(x_train_100, y_train_100)
+
+    # Merge
+    X_train, y_train, X_test, y_test, label_mapping = merge_data(
+        x_train_10, y_train_10,
+        x_train_100, y_train_100,
+        x_test_10, y_test_10,
+        x_test_100, y_test_100
+    )
+
 
 
 if __name__ == "__main__":
