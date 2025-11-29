@@ -225,6 +225,63 @@ def one_hot_encode(y_train, y_test, num_classes):
 
     return y_train, y_test
 
+def leNet_model(num_classes):
+    model = Sequential()
+
+    model.add(Conv2D(32, (5, 5), input_shape=(32, 32, 1), activation='relu',))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    model.add(Conv2D(54, (5, 5), input_shape=(32, 32, 1), activation='relu',))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    model.add(Flatten())
+
+    model.add(Dense(120, activation='relu'))
+
+    model.add(Dense(84, activation='relu'))
+
+    model.add(Dense(num_classes, activation='softmax'))
+
+    model.compile(
+        Adam(learning_rate=0.001),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    return model
+
+def evaluate_model(model, x_train, y_train, x_test, y_test):
+    print(model.summary())
+
+    history = model.fit(
+        x_train, y_train,
+        epochs=15,
+        batch_size=100,
+        validation_split=0.2,
+        shuffle=True,
+        verbose=1
+    )
+
+    # Accuracy plot
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.legend(['training', 'validation'])
+    plt.title("Accuracy")
+    plt.xlabel("Epoch")
+    plt.show()
+
+    # Loss plot
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.legend(['training', 'validation'])
+    plt.title("Loss")
+    plt.xlabel("Epoch")
+    plt.show()
+
+    # Test evaluation
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print("Test loss:", round(score[0] * 100, 2), "%")
+    print("Test accuracy:", round(score[1] * 100, 2), "%")
 
 def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
@@ -241,9 +298,10 @@ def main():
     x_train, x_test = reshape_for_cnn(x_train, x_test)
 
     num_classes = len(label_mapping)
-    one_hot_encode(y_train, y_test, num_classes)
+    y_train, y_test = one_hot_encode(y_train, y_test, num_classes)
 
-    print(num_classes)
+    model = leNet_model(num_classes)
+    evaluate_model(model, x_train, y_train, x_test, y_test)
 
 
 
