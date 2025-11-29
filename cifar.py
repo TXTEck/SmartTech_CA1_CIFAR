@@ -174,27 +174,52 @@ def merge_data(
 
     return X_train, y_train_mapped, X_test, y_test_mapped, label_mapping
 
-    
+
+def grayscale(img):
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    return img
+
+def equalize(img):
+    img = cv2.equalizeHist(img)
+    return img
+
+def preprocessing(img):
+    img = grayscale(img)
+    img = equalize(img)
+    img = img/255
+    return img
+
+def examine_random_image_after_processing(x_train):
+    img = x_train[np.random.randint(0, len(x_train))]
+    plt.imshow(img, cmap='gray')
+    plt.axis("off")
+    plt.show()
+
 def main():
     # CIFAR-10 
     x_train_10, y_train_10, x_test_10, y_test_10 = load_cifar10()
-    x_train_10 = reshape_images(x_train_10)
-    x_test_10 = reshape_images(x_test_10)
-    show_examples_cifar10(x_train_10, y_train_10)
 
     # CIFAR-100 
     x_train_100, y_train_100, x_test_100, y_test_100 = load_cifar100()
-    x_train_100 = reshape_images(x_train_100)
-    x_test_100 = reshape_images(x_test_100)
-    show_examples_cifar100(x_train_100, y_train_100)
 
     # Merge
-    X_train, y_train, X_test, y_test, label_mapping = merge_data(
+    x_train, y_train, x_test, y_test, label_mapping = merge_data(
         x_train_10, y_train_10,
         x_train_100, y_train_100,
         x_test_10, y_test_10,
         x_test_100, y_test_100
     )
+
+    x_train = reshape_images(x_train)
+    x_test  = reshape_images(x_test)
+
+    # Preprocess (grayscale, equalize, normalize)
+    x_train = np.array(list(map(preprocessing, x_train)))
+    x_test  = np.array(list(map(preprocessing, x_test)))
+
+    examine_random_image_after_processing(x_train)
+
+
 
 
 
