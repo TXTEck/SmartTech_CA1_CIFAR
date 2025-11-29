@@ -22,14 +22,22 @@ def unpickle(file):
 def load_cifar10():
     path = "cifar-10-batches-py"
 
+    # Required CIFAR-10 classes
+    SELECTED_LABELS = [1, 2, 3, 4, 5, 7, 9]
+
     x_train_list = []
     y_train_list = []
 
     # Load training batches
     for i in range(1, 6):
         batch = unpickle(os.path.join(path, f"data_batch_{i}"))
-        x_train_list.append(batch[b"data"])
-        y_train_list.extend(batch[b"labels"])
+        x_batch = batch[b"data"]
+        y_batch = np.array(batch[b"labels"])
+
+        # Filter required labels
+        mask = np.isin(y_batch, SELECTED_LABELS)
+        x_train_list.append(x_batch[mask])
+        y_train_list.extend(y_batch[mask])
 
     # Combine training data
     x_train = np.vstack(x_train_list)
@@ -37,8 +45,13 @@ def load_cifar10():
 
     # Load test batch
     test_batch = unpickle(os.path.join(path, "test_batch"))
-    x_test = test_batch[b"data"]
-    y_test = np.array(test_batch[b"labels"])
+    x_test_raw = test_batch[b"data"]
+    y_test_raw = np.array(test_batch[b"labels"])
+
+    # Filter test batch
+    filter = np.isin(y_test_raw, SELECTED_LABELS)
+    x_test = x_test_raw[filter]
+    y_test = y_test_raw[filter]
 
     return x_train, y_train, x_test, y_test
 
@@ -46,18 +59,31 @@ def load_cifar10():
 def load_cifar100():
     path = "cifar-100-python"
 
+    SELECTED_FINE_LABELS = [
+        19, 34, 2, 11, 35, 46, 98, 65, 80,     # main classes
+        47, 52, 56, 59, 96,                   # trees superclass
+        8, 13, 48, 58, 90, 41, 89             # vehicle/tool classes
+    ]
+
     train = unpickle(os.path.join(path, "train"))
     test  = unpickle(os.path.join(path, "test"))
 
-    x_train = train[b"data"]
-    y_fine_train = np.array(train[b"fine_labels"])
-    y_coarse_train = np.array(train[b"coarse_labels"])
+    x_train_raw = train[b"data"]
+    y_fine_train_raw = np.array(train[b"fine_labels"])
 
-    x_test = test[b"data"]
-    y_fine_test = np.array(test[b"fine_labels"])
-    y_coarse_test = np.array(test[b"coarse_labels"])
+    x_test_raw = test[b"data"]
+    y_fine_test_raw = np.array(test[b"fine_labels"])
 
-    return x_train, y_fine_train, y_coarse_train, x_test, y_fine_test, y_coarse_test
+    # Filter
+    filter = np.isin(y_fine_train_raw, SELECTED_FINE_LABELS)
+    x_train = x_train_raw[filter]
+    y_train = y_fine_train_raw[filter]
+
+    filter = np.isin(y_fine_test_raw, SELECTED_FINE_LABELS)
+    x_test = x_test_raw[filter]
+    y_test = y_fine_test_raw[filter]
+
+    return x_train, y_train, x_test, y_test
 
 #Get CIFAR-10 label names
 def get_cifar10_label_names():
@@ -94,25 +120,21 @@ def show_examples_cifar10(x_train, y_train):
     plt.show()
 
 #Show CIFAR100 examples
-def show_examples_cifar100(x_train, y_fine_train, y_coarse_train):
-    fine_names, coarse_names = get_cifar100_label_names()
+def show_examples_cifar100(x_train, y_train):
+    fine_names, _ = get_cifar100_label_names()   # we ignore coarse names
 
     plt.figure(figsize=(15, 15))
 
     for i in range(50):
-        idx = np.random.randint(0, len(x_train))
-        img = x_train[idx]
+        id = np.random.randint(0, len(x_train))
+        img = x_train[id]
 
-        fine_label = y_fine_train[idx]
-        coarse_label = y_coarse_train[idx]
-
+        fine_label = y_train[id]
         fine_name = fine_names[fine_label]
-        coarse_name = coarse_names[coarse_label]
 
         plt.subplot(5, 10, i + 1)
         plt.imshow(img)
-        plt.title(f"{fine_label} {fine_name}\n({coarse_label} {coarse_name})",
-                  fontsize=7)
+        plt.title(f"{fine_label} - {fine_name}", fontsize=7)
         plt.axis("off")
 
     plt.tight_layout()
@@ -129,9 +151,10 @@ def main():
     show_examples_cifar10(x_train_10, y_train_10)
 
     # CIFAR-100
-    x_train_100, y_fine_train_100, y_coarse_train_100, x_test_100, y_fine_test_100, y_coarse_test_100 = load_cifar100()
+    x_train_100, y_train_100, x_test_100, y_test_100 = load_cifar100()
     x_train_100 = reshape_images(x_train_100)
-    show_examples_cifar100(x_train_100, y_fine_train_100, y_coarse_train_100)
+    show_examples_cifar100(x_train_100, y_train_100)
+
 
 if __name__ == "__main__":
     main()
