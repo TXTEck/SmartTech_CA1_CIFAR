@@ -101,6 +101,7 @@ def get_cifar100_label_names():
 
 #Show CIFAR10 examples
 def show_examples_cifar10(x_train, y_train):
+    x_train = reshape_images(x_train)
     label_names = get_cifar10_label_names()
 
     plt.figure(figsize=(15, 15))
@@ -121,6 +122,7 @@ def show_examples_cifar10(x_train, y_train):
 
 #Show CIFAR100 examples
 def show_examples_cifar100(x_train, y_train):
+    x_train = reshape_images(x_train)
     fine_names, _ = get_cifar100_label_names()
 
     plt.figure(figsize=(15, 15))
@@ -183,10 +185,15 @@ def equalize(img):
     img = cv2.equalizeHist(img)
     return img
 
+def normalize(img):
+    img = img/255
+    return img
+
 def preprocessing(img):
     img = grayscale(img)
     img = equalize(img)
-    img = img/255
+    img = normalize(img)
+    
     return img
 
 def examine_random_image_after_processing(x_train):
@@ -202,6 +209,9 @@ def load_and_merge_data():
 
     # CIFAR-100 
     x_train_100, y_train_100, x_test_100, y_test_100 = load_cifar100()
+
+    show_examples_cifar10(x_train_10,y_train_10)
+    show_examples_cifar100(x_train_100,y_train_100)
 
     # Merge
     x_train, y_train, x_test, y_test, label_mapping = merge_data(
@@ -255,8 +265,8 @@ def evaluate_model(model, x_train, y_train, x_test, y_test):
 
     history = model.fit(
         x_train, y_train,
-        epochs=15,
-        batch_size=100,
+        epochs=30,
+        batch_size=128,
         validation_split=0.2,
         shuffle=True,
         verbose=1
@@ -278,9 +288,8 @@ def evaluate_model(model, x_train, y_train, x_test, y_test):
     plt.xlabel("Epoch")
     plt.show()
 
-    # Test evaluation
     score = model.evaluate(x_test, y_test, verbose=0)
-    print("Test loss:", round(score[0] * 100, 2), "%")
+    print("Test loss:", round(score[0]))
     print("Test accuracy:", round(score[1] * 100, 2), "%")
 
 def main():
@@ -302,8 +311,6 @@ def main():
 
     model = leNet_model(num_classes)
     evaluate_model(model, x_train, y_train, x_test, y_test)
-
-
 
 
 
