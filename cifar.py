@@ -189,11 +189,15 @@ def normalize(img):
     img = img/255
     return img
 
+def gaussian_blur(img):
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    return img
+
 def preprocessing(img):
     img = grayscale(img)
     img = equalize(img)
     img = normalize(img)
-    
+    img = gaussian_blur(img)
     return img
 
 def examine_random_image_after_processing(x_train):
