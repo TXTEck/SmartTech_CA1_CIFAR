@@ -195,10 +195,18 @@ def gaussian_blur(img):
 
 def preprocessing(img):
     img = grayscale(img)
+    img = gaussian_blur(img)
     img = equalize(img)
     img = normalize(img)
-    img = gaussian_blur(img)
+
     return img
+
+def show_dataset_sizes(x_train, y_train, x_test, y_test):
+    print("\nDataset Sizes")
+    print(f"Training images: {len(x_train)}")
+    print(f"Training labels: {len(y_train)}")
+    print(f"Test images:     {len(x_test)}")
+    print(f"Test labels:     {len(y_test)}")
 
 def examine_random_image_after_processing(x_train):
     img = x_train[np.random.randint(0, len(x_train))]
@@ -245,7 +253,7 @@ def leNet_model(num_classes):
     model.add(Conv2D(32, (5, 5), input_shape=(32, 32, 1), activation='relu',))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(54, (5, 5), input_shape=(32, 32, 1), activation='relu',))
+    model.add(Conv2D(54, (5, 5), activation='relu',))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Flatten())
@@ -298,6 +306,8 @@ def evaluate_model(model, x_train, y_train, x_test, y_test):
 
 def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
+
+    show_dataset_sizes(x_train, y_train, x_test, y_test)
 
     x_train = reshape_images(x_train)
     x_test  = reshape_images(x_test)
