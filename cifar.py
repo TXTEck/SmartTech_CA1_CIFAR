@@ -320,9 +320,7 @@ def improved_model(num_classes):
         optimizer=Adam(learning_rate=0.001),
         loss="categorical_crossentropy",
         metrics=["accuracy"],
-    )
-
-    return model
+)
 
 def evaluate_model(model, x_train, y_train, x_test, y_test):
     print(model.summary())
@@ -390,7 +388,6 @@ def main():
 
     model = leNet_model(num_classes)
     evaluate_model(model, x_train, y_train, x_test, y_test)
-
 
 
 if __name__ == "__main__":
