@@ -22,3 +22,6 @@ cifar-100-python/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Model files
+vgg_model_trained.h5
