@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropou
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 np.random.seed(0)
 
@@ -204,22 +205,24 @@ def preprocessing(img):
 def show_dataset_sizes(x_train, y_train, x_test, y_test):
     print("\nDataset Sizes")
     print(f"Training images: {len(x_train)}")
+    print(f"Training labels: {len(y_train)}")
     print(f"Test images:     {len(x_test)}")
+    print(f"Test labels:     {len(y_test)}")
 
-def number_of_images(y, label_mapping=None, title="Class Distribution"):
+def number_of_images(y, label_mapping=None, title=""):
     print(f"\n{title}")
 
-    # Get CIFAR-10 and CIFAR-100 names
     cifar10_names = get_cifar10_label_names()
     cifar100_names, _ = get_cifar100_label_names()
 
     unique, counts = np.unique(y, return_counts=True)
 
-    for cls, count in zip(unique, counts):
-        # original label before remapping
+    for i in range(len(unique)):
+        cls = unique[i]
+        count = counts[i]
+
         orig_label = list(label_mapping.keys())[list(label_mapping.values()).index(cls)]
 
-        # choose name source
         if orig_label < 10:
             label_name = cifar10_names[orig_label]
         else:
