@@ -11,6 +11,9 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.callbacks import EarlyStopping
+
 
 np.random.seed(0)
 
@@ -320,10 +323,30 @@ def improved_model(num_classes):
         optimizer=Adam(learning_rate=0.001),
         loss="categorical_crossentropy",
         metrics=["accuracy"],
-)
+    )
+
+    return model
+
+def vgg_model(num_classes):
+    base = VGG16(include_top=False, weights="imagenet", input_shape=(32, 32, 3))
+
+    x = Flatten()(base.output)
+    x = Dense(256, activation="relu")(x)
+    x = Dropout(0.5)(x)
+    x = Dense(num_classes, activation="softmax")(x)
+
+    model = Model(inputs=base.input, outputs=x)
+    model.compile(
+        optimizer=Adam(1e-4), loss="categorical_crossentropy", metrics=["accuracy"]
+    )
+    return model
 
 def evaluate_model(model, x_train, y_train, x_test, y_test):
     print(model.summary())
+
+    early_stop = EarlyStopping(
+        monitor="val_loss", patience=5, restore_best_weights=True
+    )
 
     datagen = ImageDataGenerator(
         rotation_range=15,
@@ -342,6 +365,7 @@ def evaluate_model(model, x_train, y_train, x_test, y_test):
         validation_data=(x_test, y_test),
         shuffle=True,
         verbose=1,
+        callbacks=[early_stop]
     )
 
     # Accuracy plot
@@ -364,6 +388,47 @@ def evaluate_model(model, x_train, y_train, x_test, y_test):
     print("Test loss:", round(score[0]))
     print("Test accuracy:", round(score[1] * 100, 2), "%")
 
+
+def evaluate_vggmodel(model, x_train, y_train, x_test, y_test):
+    print(model.summary())
+
+    datagen = ImageDataGenerator(
+        rotation_range=15,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        zoom_range=0.1,
+        horizontal_flip=True,
+    )
+    datagen.fit(x_train)
+
+    history = model.fit(
+        datagen.flow(x_train, y_train, batch_size=64),
+        epochs=30,
+        validation_data=(x_test, y_test),
+        shuffle=True,
+        verbose=1,
+    )
+
+    plt.plot(history.history["accuracy"])
+    plt.plot(history.history["val_accuracy"])
+    plt.legend(["Training", "Validation"])
+    plt.title("Accuracy")
+    plt.xlabel("Epoch")
+    plt.show()
+
+    plt.plot(history.history["loss"])
+    plt.plot(history.history["val_loss"])
+    plt.legend(["Training", "Validation"])
+    plt.title("Loss")
+    plt.xlabel("Epoch")
+    plt.show()
+
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print("Test loss:", round(score[0]))
+    print("Test accuracy:", round(score[1] * 100, 2), "%")
+
+    return history
+
 def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
 
@@ -379,15 +444,18 @@ def main():
     x_train = np.array(list(map(preprocessing, x_train)))
     x_test  = np.array(list(map(preprocessing, x_test)))
 
-    examine_random_image_after_processing(x_train)
+    #examine_random_image_after_processing(x_train)
 
     x_train, x_test = reshape_for_cnn(x_train, x_test)
 
     num_classes = len(label_mapping)
     y_train, y_test = one_hot_encode(y_train, y_test, num_classes)
 
-    model = leNet_model(num_classes)
-    evaluate_model(model, x_train, y_train, x_test, y_test)
+    # model = leNet_model(num_classes)
+    # evaluate_model(model, x_train, y_train, x_test, y_test)
+
+    model = vgg_model(num_classes)
+    evaluate_vggmodel(model, x_train, y_train, x_test, y_test)
 
 
 if __name__ == "__main__":
