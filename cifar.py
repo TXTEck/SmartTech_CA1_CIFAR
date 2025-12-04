@@ -294,6 +294,59 @@ def leNet_model(num_classes):
 
     return model
 
+# improved model
+#def improved_model(num_classes, input_shape=(32, 32, 1)):
+    from tensorflow.keras.layers import (
+        Conv2D, MaxPooling2D, Flatten, Dense, Dropout,
+        BatchNormalization, Activation, GlobalAveragePooling2D
+    )
+
+    model = Sequential()
+
+    # Block 1
+    model.add(Conv2D(32, (3, 3), padding="same", input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(Activation("relu"))
+    model.add(Conv2D(32, (3, 3), padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))
+
+    # Block 2
+    model.add(Conv2D(64, (3, 3), padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation("relu"))
+    model.add(Conv2D(64, (3, 3), padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.30))
+
+    # Block 3
+    model.add(Conv2D(128, (3, 3), padding="same"))
+    model.add(BatchNormalization())
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.35))
+
+    # Classification head
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(256, activation="relu"))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation="softmax"))
+
+    model.compile(
+        optimizer=Adam(learning_rate=1e-3),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    return model
+
+# Evaluate model
+
 def evaluate_model(model, x_train, y_train, x_test, y_test):
     print(model.summary())
 
@@ -352,6 +405,60 @@ def main():
     # evaluate_model(model, x_train, y_train, x_test, y_test)
 
 
+#Mini VGG model for better performance
+
+   # def mini_vgg_model(num_classes, input_shape=(32, 32, 1)):
+      #  from tensorflow.keras.layers import (
+       #     Conv2D, MaxPooling2D, Flatten, Dense, Dropout,
+        #    BatchNormalization, Activation
+        #)
+
+       # model = Sequential()
+
+        # Block 1
+        #model.add(Conv2D(32, (3, 3), padding="same", input_shape=input_shape))
+        #model.add(BatchNormalization())
+        #model.add(Activation("relu"))
+        #model.add(Conv2D(32, (3, 3), padding="same"))
+        #model.add(BatchNormalization())
+       # model.add(Activation("relu"))
+        #model.add(MaxPooling2D((2, 2)))
+        #model.add(Dropout(0.25))
+
+        # Block 2
+        #model.add(Conv2D(64, (3, 3), padding="same"))
+        #model.add(BatchNormalization())
+        #model.add(Activation("relu"))
+        #model.add(Conv2D(64, (3, 3), padding="same"))
+        #model.add(BatchNormalization())
+        #model.add(Activation("relu"))
+        #model.add(MaxPooling2D((2, 2)))
+        #model.add(Dropout(0.25))
+
+        # Block 3
+        #model.add(Conv2D(128, (3, 3), padding="same"))
+        #model.add(BatchNormalization())
+        #model.add(Activation("relu"))
+        #model.add(Conv2D(128, (3, 3), padding="same"))
+       # model.add(BatchNormalization())
+       # model.add(Activation("relu"))
+       # model.add(MaxPooling2D((2, 2)))
+        #model.add(Dropout(0.25))
+
+        # Classifier
+       # model.add(Flatten())
+        #model.add(Dense(512, activation="relu"))
+        #model.add(BatchNormalization())
+        #model.add(Dropout(0.5))
+        #model.add(Dense(num_classes, activation="softmax"))
+
+        #model.compile(
+       #     optimizer=Adam(learning_rate=1e-3),
+        #    loss="categorical_crossentropy",
+       #     metrics=["accuracy"]
+       # )
+
+       # return model
 
 if __name__ == "__main__":
     main()
