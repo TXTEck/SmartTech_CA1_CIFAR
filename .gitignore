@@ -24,4 +24,4 @@ cifar-100-python/
 Thumbs.db
 
 # Model files
-vgg_model_trained.h5
+*.h5
