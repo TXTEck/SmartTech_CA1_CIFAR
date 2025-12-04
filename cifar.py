@@ -11,6 +11,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+
 np.random.seed(0)
 
 #Unpickle data
@@ -195,9 +196,9 @@ def gaussian_blur(img):
     return img
 
 def preprocessing(img):
-    img = grayscale(img)
+    #img = grayscale(img)
     img = gaussian_blur(img)
-    img = equalize(img)
+    #img = equalize(img)
     img = normalize(img)
 
     return img
@@ -258,8 +259,8 @@ def load_and_merge_data():
     return x_train, y_train, x_test, y_test, label_mapping
 
 def reshape_for_cnn(x_train,x_test):
-    x_train = x_train.reshape(x_train.shape[0], 32, 32, 1)
-    x_test = x_test.reshape(x_test.shape[0], 32, 32, 1)
+    x_train = x_train.reshape(x_train.shape[0], 32, 32, 3)
+    x_test = x_test.reshape(x_test.shape[0], 32, 32, 3)
 
     return x_train, x_test
 
@@ -272,7 +273,7 @@ def one_hot_encode(y_train, y_test, num_classes):
 def leNet_model(num_classes):
     model = Sequential()
 
-    model.add(Conv2D(32, (5, 5), input_shape=(32, 32, 1), activation='relu',))
+    model.add(Conv2D(32, (5, 5), input_shape=(32, 32, 3), activation='relu',))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(54, (5, 5), activation='relu',))
@@ -290,6 +291,35 @@ def leNet_model(num_classes):
         Adam(learning_rate=0.001),
         loss="categorical_crossentropy",
         metrics=["accuracy"]
+    )
+
+    return model
+
+def improved_model(num_classes):
+    model = Sequential()
+
+    model.add(
+        Conv2D(32, (3, 3), activation="relu", input_shape=(32, 32, 1))
+    )
+    model.add(Conv2D(32, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(64, (3, 3), activation="relu"))
+    model.add(Conv2D(64, (3, 3), activation="relu"))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())
+    model.add(Dense(256, activation="relu"))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(num_classes, activation="softmax"))
+
+    model.compile(
+        optimizer=Adam(learning_rate=0.001),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
 
     return model
