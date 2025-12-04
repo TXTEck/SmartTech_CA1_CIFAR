@@ -204,9 +204,28 @@ def preprocessing(img):
 def show_dataset_sizes(x_train, y_train, x_test, y_test):
     print("\nDataset Sizes")
     print(f"Training images: {len(x_train)}")
-    print(f"Training labels: {len(y_train)}")
     print(f"Test images:     {len(x_test)}")
-    print(f"Test labels:     {len(y_test)}")
+
+def number_of_images(y, label_mapping=None, title="Class Distribution"):
+    print(f"\n{title}")
+
+    # Get CIFAR-10 and CIFAR-100 names
+    cifar10_names = get_cifar10_label_names()
+    cifar100_names, _ = get_cifar100_label_names()
+
+    unique, counts = np.unique(y, return_counts=True)
+
+    for cls, count in zip(unique, counts):
+        # original label before remapping
+        orig_label = list(label_mapping.keys())[list(label_mapping.values()).index(cls)]
+
+        # choose name source
+        if orig_label < 10:
+            label_name = cifar10_names[orig_label]
+        else:
+            label_name = cifar100_names[orig_label]
+
+        print(f"Class {cls:2d} ({label_name}): {count}")
 
 def examine_random_image_after_processing(x_train):
     img = x_train[np.random.randint(0, len(x_train))]
@@ -308,23 +327,26 @@ def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
 
     show_dataset_sizes(x_train, y_train, x_test, y_test)
+    number_of_images(y_train, label_mapping, title="Training Set Class Distribution")
+    number_of_images(y_test, label_mapping, title="Test Set Class Distribution")
+
 
     x_train = reshape_images(x_train)
     x_test  = reshape_images(x_test)
 
     # Preprocess
-    x_train = np.array(list(map(preprocessing, x_train)))
-    x_test  = np.array(list(map(preprocessing, x_test)))
+    # x_train = np.array(list(map(preprocessing, x_train)))
+    # x_test  = np.array(list(map(preprocessing, x_test)))
 
-    examine_random_image_after_processing(x_train)
+    # examine_random_image_after_processing(x_train)
 
-    x_train, x_test = reshape_for_cnn(x_train, x_test)
+    # x_train, x_test = reshape_for_cnn(x_train, x_test)
 
-    num_classes = len(label_mapping)
-    y_train, y_test = one_hot_encode(y_train, y_test, num_classes)
+    # num_classes = len(label_mapping)
+    # y_train, y_test = one_hot_encode(y_train, y_test, num_classes)
 
-    model = leNet_model(num_classes)
-    evaluate_model(model, x_train, y_train, x_test, y_test)
+    # model = leNet_model(num_classes)
+    # evaluate_model(model, x_train, y_train, x_test, y_test)
 
 
 
