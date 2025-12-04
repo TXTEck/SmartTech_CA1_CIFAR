@@ -3,16 +3,19 @@ import matplotlib.pyplot as plt
 import pickle
 import cv2
 import os
+import requests
+
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.callbacks import EarlyStopping
+
+from PIL import Image
 
 
 np.random.seed(0)
@@ -401,13 +404,22 @@ def evaluate_vggmodel(model, x_train, y_train, x_test, y_test):
     )
     datagen.fit(x_train)
 
+    early_stop = EarlyStopping(
+        monitor='val_accuracy',
+        patience=5,
+        restore_best_weights=True
+    )
+
     history = model.fit(
         datagen.flow(x_train, y_train, batch_size=64),
-        epochs=30,
+        epochs=15,
         validation_data=(x_test, y_test),
         shuffle=True,
         verbose=1,
+        callbacks=[early_stop],
     )
+
+    model.save("vgg_model_trained.h5")
 
     plt.plot(history.history["accuracy"])
     plt.plot(history.history["val_accuracy"])
@@ -428,6 +440,33 @@ def evaluate_vggmodel(model, x_train, y_train, x_test, y_test):
     print("Test accuracy:", round(score[1] * 100, 2), "%")
 
     return history
+
+def test_model_with_images(model, url, label_mapping):
+
+    headers = {"User-Agent": "Mozilla/5.0"}
+    r = requests.get(url, stream=True, headers=headers)
+    img = Image.open(r.raw)
+
+
+    img = np.asarray(img)
+    img = cv2.resize(img, (32, 32))
+    img = preprocessing(img)
+    img = img.reshape(1, 32, 32, 3)
+
+    pred = np.argmax(model.predict(img), axis=1)[0]
+
+    rev_map = {v: k for k, v in label_mapping.items()}
+    original_label = rev_map[pred]
+
+    cifar10_names = get_cifar10_label_names()
+    cifar100_names, _ = get_cifar100_label_names()
+
+    if original_label < 10:
+        label_name = cifar10_names[original_label]
+    else:
+        label_name = cifar100_names[original_label]
+
+    print(f"Predicted class: {label_name}")
 
 def main():
     x_train, y_train, x_test, y_test, label_mapping = load_and_merge_data()
@@ -454,8 +493,24 @@ def main():
     # model = leNet_model(num_classes)
     # evaluate_model(model, x_train, y_train, x_test, y_test)
 
-    model = vgg_model(num_classes)
-    evaluate_vggmodel(model, x_train, y_train, x_test, y_test)
+    if os.path.exists("vgg_model_trained.h5"):
+        print("Loading saved model...")
+        model = load_model("vgg_model_trained.h5")
+    else:
+        print("Training new model...")
+        model = vgg_model(num_classes)
+        evaluate_vggmodel(model, x_train, y_train, x_test, y_test)
+
+
+    url_cat = "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg?download=1"
+    test_model_with_images(model, url_cat, label_mapping,)
+
+    url_tree = "https://upload.wikimedia.org/wikipedia/commons/e/eb/Ash_Tree_-_geograph.org.uk_-_590710.jpg"
+    test_model_with_images(model, url_tree, label_mapping)
+
+    url_man = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Jens_Stoltenberg.jpg/640px-Jens_Stoltenberg.jpg"
+    test_model_with_images(model, url_man, label_mapping)
+
 
 
 if __name__ == "__main__":
